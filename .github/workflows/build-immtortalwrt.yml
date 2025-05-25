@@ -19,7 +19,7 @@ on:
           - lede-master
           - immortalwrt-23.05.4
           - immortalwrt-23.05.4-e20c
-          - immortalwrt-23.05.4-l905l2
+          - immortalwrt-23.05.4-s905l2
       openwrt_board:
         description: "Select device board"
         required: false
