@@ -27,6 +27,7 @@ on:
         type: choice
         options:
           - ophub/openwrt-aarch64:latest
+          - liuhuaimin/git
 
 env:
   TZ: America/New_York
