@@ -23,11 +23,12 @@ on:
       docker_img:
         description: "Set the docker image"
         required: false
-        default: "ophub/openwrt-aarch64:latest"
+        default: "liuhuaimin/immortalwrt"
         type: choice
         options:
-          - ophub/openwrt-aarch64:latest
-          - liuhuaimin/git
+          - liuhuaimin/official
+          - liuhuaimin/lede
+          - liuhuaimin/immortalwrt
 
 env:
   TZ: America/New_York
