@@ -300,7 +300,7 @@ jobs:
         run: |
           cd imagebuilder
           [[ -d "output" ]] || mkdir output
-          cp -f bin/targets/*/*/*.tar.gz output/
+          cp -f bin/targets/*/*/*rootfs.tar.gz output/
           cp -f .config output/config
           rm -rf $(ls . | grep -v "^output$" | xargs) 2>/dev/null
 
@@ -309,7 +309,7 @@ jobs:
           for file in *; do [[ ! -d "${file}" ]] && sha256sum "${file}" >"${file}.sha"; done
 
           [[ -d "/builder/openwrt" ]] || mkdir -p /builder/openwrt
-          ln -sf /builder/openwrt /home/runner/work/_actions/ophub/amlogic-s9xxx-openwrt/customize/openwrt
+          ln -sf /builder/openwrt /home/runner/work/_actions/ophub/amlogic-s9xxx-openwrt/main/openwrt
           df -hT ${PWD}
           echo "status=success" >> ${GITHUB_OUTPUT}
 
