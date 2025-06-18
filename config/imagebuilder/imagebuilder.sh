@@ -189,7 +189,8 @@ rebuild_firmware() {
         luci-lib-ip luci-lib-ipkg luci-lib-jsonc luci-lib-nixio luci-mod-admin-full luci-mod-network \
         luci-mod-status luci-mod-system luci-proto-3g luci-proto-ipip luci-proto-ipv6 \
         luci-proto-ncm luci-proto-openconnect luci-proto-ppp luci-proto-qmi luci-proto-relay \
-        \
+        kmod-zram zram-swap \
+        luci-i18n-opkg-zh-cn \
         luci-app-amlogic luci-i18n-amlogic-zh-cn \
         \
         ${config_list} \
