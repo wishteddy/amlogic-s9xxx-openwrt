@@ -191,8 +191,8 @@ rebuild_firmware() {
         luci-proto-ncm luci-proto-openconnect luci-proto-ppp luci-proto-qmi luci-proto-relay \
         opkg luci-app-opkg luci-i18n-opkg-zh-cn \
         firewall4 luci-app-firewall luci-i18n-firewall-zh-cn \
-        luci-app-amlogic luci-i18n-amlogic-zh-cn \
-        \
+        luci-app-amlogic luci-i18n-amlogic-zh-cn\
+        
         ${config_list} \
         "
 
