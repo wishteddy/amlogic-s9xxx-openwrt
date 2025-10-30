@@ -23,7 +23,7 @@ on:
           - openwrt:22.03.7
           - immortalwrt:24.10.1
           - immortalwrt:24.10.0
-          - immortalwrt:23.05.4
+          - immortalwrt:23.05.7
       openwrt_board:
         description: "Select device board"
         required: false
