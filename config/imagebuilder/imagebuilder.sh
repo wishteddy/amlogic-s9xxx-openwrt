@@ -173,6 +173,7 @@ rebuild_firmware() {
     echo -e "${STEPS} Start building OpenWrt with Image Builder..."
 
     # Selecting default packages, lib, theme, app and i18n, etc.
+    # luci-app-amlogic luci-i18n-amlogic-zh-cn \
     my_packages="\
         acpid attr base-files bash bc blkid block-mount blockd bsdtar btrfs-progs busybox bzip2 \
         cgi-io chattr comgt comgt-ncm containerd coremark coreutils coreutils-base64 coreutils-nohup \
@@ -191,7 +192,6 @@ rebuild_firmware() {
         luci-proto-ncm luci-proto-openconnect luci-proto-ppp luci-proto-qmi luci-proto-relay \
         kmod-zram zram-swap \
         luci-i18n-opkg-zh-cn \
-        luci-app-amlogic luci-i18n-amlogic-zh-cn \
         \
         ${config_list} \
         "
