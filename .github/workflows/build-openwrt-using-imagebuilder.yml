@@ -26,6 +26,8 @@ on:
           - immortalwrt:24.10.3
           - immortalwrt:24.10.2
           - immortalwrt:24.10.1
+          - immortalwrt:23.05.7
+          
       openwrt_board:
         description: "Select device board"
         required: false
@@ -369,7 +371,7 @@ jobs:
             ### OpenWrt Image information
             - Default IP: 192.168.1.1
             - Default username: root
-            - Default password: password
+            - Default password: none
             - Default WIFI name: OpenWrt
             - Default WIFI password: none
             ### Install to EMMC
