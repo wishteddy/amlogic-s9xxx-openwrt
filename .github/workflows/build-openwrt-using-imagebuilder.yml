@@ -246,7 +246,7 @@ on:
         options:
           - ophub
           - angel
-          - yourname
+          - wishtoday
 
 env:
   TZ: Etc/UTC
