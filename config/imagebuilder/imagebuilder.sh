@@ -196,7 +196,7 @@ rebuild_firmware() {
         kmod-zram zram-swap \
         luci-i18n-opkg-zh-cn \
         \
-        luci-app-amlogic luci-i18n-amlogic-zh-cn \
+        \
         \
         ${config_list} \
         "
