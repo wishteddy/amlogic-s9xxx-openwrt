@@ -5,10 +5,10 @@
 # License version 2. This program is licensed "as is" without any
 # warranty of any kind, whether express or implied.
 #
-# This file is a part of the OpenWrt Image Builder workflow
+# This file is a part of the make OpenWrt for Amlogic s9xxx tv box
 # https://github.com/ophub/amlogic-s9xxx-openwrt
 #
-# Description: Build OpenWrt firmware using the official Image Builder
+# Description: Build OpenWrt with Image Builder
 # Copyright (C) 2021~ https://github.com/unifreq/openwrt_packit
 # Copyright (C) 2021~ https://github.com/ophub/amlogic-s9xxx-openwrt
 # Copyright (C) 2021~ https://downloads.openwrt.org/releases
@@ -18,22 +18,22 @@
 #                https://downloads.immortalwrt.org/releases
 #
 # Documentation: https://openwrt.org/docs/guide-user/additional-software/imagebuilder
-# Instructions:  Download the official OpenWrt Image Builder,
-#                then use it to add packages, libraries, themes, apps, and i18n support.
+# Instructions:  Download OpenWrt firmware from the official OpenWrt,
+#                Use Image Builder to add packages, lib, theme, app and i18n, etc.
 #
 # Command: ./config/imagebuilder/imagebuilder.sh <source:branch>
 #          ./config/imagebuilder/imagebuilder.sh openwrt:24.10.4
 #
 #======================================== Functions list ========================================
 #
-# error_msg               : Output error message and abort
-# download_imagebuilder   : Download and extract the OpenWrt Image Builder
-# adjust_settings         : Adjust Image Builder .config settings
-# custom_packages         : Download and add custom packages
-# custom_config           : Load custom package configuration
-# custom_files            : Add custom overlay files
-# rebuild_firmware        : Build firmware using Image Builder
-# custom_settings         : Apply post-build customizations
+# error_msg               : Output error message
+# download_imagebuilder   : Downloading OpenWrt ImageBuilder
+# adjust_settings         : Adjust related file settings
+# custom_packages         : Add custom packages
+# custom_config           : Add custom config
+# custom_files            : Add custom files
+# rebuild_firmware        : rebuild_firmware
+# custom_settings         : Custom settings after rebuild
 #
 #================================ Set make environment variables ================================
 #
@@ -56,7 +56,7 @@ ERROR="[\033[91m ERROR \033[0m]"
 #
 #================================================================================================
 
-# Output error message and abort script execution
+# Encountered a serious error, abort the script execution
 error_msg() {
     echo -e "${ERROR} ${1}"
     exit 1
@@ -65,20 +65,15 @@ error_msg() {
 # Downloading OpenWrt ImageBuilder
 download_imagebuilder() {
     cd ${make_path}
-    echo -e "${STEPS} Downloading OpenWrt ImageBuilder..."
+    echo -e "${STEPS} Start downloading OpenWrt files..."
 
     # Downloading imagebuilder files
-    if [[ "${op_sourse}" == "immortalwrt" ]]; then
-        download_url="downloads.immortalwrt.org"
-    else
-        download_url="downloads.openwrt.org"
-    fi
-    download_file="https://${download_url}/releases/${op_branch}/targets/armsr/armv8/${op_sourse}-imagebuilder-${op_branch}-armsr-armv8.Linux-x86_64.tar.xz"
+    download_file="https://downloads.${op_sourse}.org/releases/${op_branch}/targets/armsr/armv8/${op_sourse}-imagebuilder-${op_branch}-armsr-armv8.Linux-x86_64.tar.xz"
     curl -fsSOL ${download_file}
-    [[ "${?}" -eq "0" ]] || error_msg "Failed to download: [ ${download_file} ]"
+    [[ "${?}" -eq "0" ]] || error_msg "Download failed: [ ${download_file} ]"
 
     # Unzip and change the directory name
-    tar -xvJf -imagebuilder-.tar.xz -C . && sync && rm -f -imagebuilder-.tar.xz
+    tar -xvJf *-imagebuilder-*.tar.xz -C . && sync && rm -f *-imagebuilder-*.tar.xz
     mv -f *-imagebuilder-* ${openwrt_dir}
 
     sync && sleep 3
@@ -88,7 +83,7 @@ download_imagebuilder() {
 # Adjust related files in the ImageBuilder directory
 adjust_settings() {
     cd ${imagebuilder_path}
-    echo -e "${STEPS} Adjusting ImageBuilder .config settings..."
+    echo -e "${STEPS} Start adjusting .config file settings..."
 
     # For .config file
     if [[ -s ".config" ]]; then
@@ -100,7 +95,7 @@ adjust_settings() {
         sed -i "s|CONFIG_TARGET_IMAGES_GZIP=.*|# CONFIG_TARGET_IMAGES_GZIP is not set|g" .config
     else
         echo -e "${INFO} [ ${imagebuilder_path} ] directory status: \n$(ls -lh . 2>/dev/null)"
-        error_msg "No .config file found in [ ${download_file} ]."
+        error_msg "There is no .config file in the [ ${download_file} ]"
     fi
 
     # For other files
@@ -115,7 +110,7 @@ adjust_settings() {
 # If one does not exist and place your custom ipk within this directory.
 custom_packages() {
     cd ${imagebuilder_path}
-    echo -e "${STEPS} Adding custom packages..."
+    echo -e "${STEPS} Start adding custom packages..."
 
     # Create a [ packages ] directory
     [[ -d "packages" ]] || mkdir packages
@@ -123,55 +118,37 @@ custom_packages() {
 
     # Download luci-app-amlogic
     amlogic_api="https://api.github.com/repos/ophub/luci-app-amlogic/releases"
-    # Get the latest release version
-    amlogic_plugin_latest_version="$(curl -s ${amlogic_api} | grep tag_name | head -n1 | cut -d '"' -f4)"
-    # Get the download URLs for the latest release assets (ipk or apk files)
-    amlogic_plugin_list=($(curl -s ${amlogic_api} | grep "browser_download_url" | grep -oE "https.*/${amlogic_plugin_latest_version}/.*\.(ipk|apk)"))
-
-    # Download the latest release assets
-    for plugin_url in "${amlogic_plugin_list[@]}"; do
-        curl -fsSOJL "${plugin_url}"
-        [[ "${?}" -eq "0" ]] && echo -e "${INFO} The [ ${plugin_url} ] is downloaded successfully."
-    done
+    #
+    amlogic_plugin="luci-app-amlogic"
+    amlogic_plugin_down="$(curl -s ${amlogic_api} | grep "browser_download_url" | grep -oE "https.*${amlogic_plugin}.*.ipk" | head -n 1)"
+    curl -fsSOJL ${amlogic_plugin_down}
+    [[ "${?}" -eq "0" ]] || error_msg "[ ${amlogic_plugin} ] download failed!"
+    echo -e "${INFO} The [ ${amlogic_plugin} ] is downloaded successfully."
+    #
+    amlogic_i18n="luci-i18n-amlogic"
+    amlogic_i18n_down="$(curl -s ${amlogic_api} | grep "browser_download_url" | grep -oE "https.*${amlogic_i18n}.*.ipk" | head -n 1)"
+    curl -fsSOJL ${amlogic_i18n_down}
+    [[ "${?}" -eq "0" ]] || error_msg "[ ${amlogic_i18n} ] download failed!"
+    echo -e "${INFO} The [ ${amlogic_i18n} ] is downloaded successfully."
 
     # Download other luci-app-xxx
     # ......
 
-    # Remove the packages that are not needed based on the Image Builder type (APK or OPKG)
-    if grep -q "CONFIG_USE_APK=y" ../.config; then
-        echo -e "${INFO} APK-based ImageBuilder detected. Removing .ipk files..."
-        rm -f *.ipk
-
-        # Fix the filename format of APK files to be compatible with Image Builder requirements.
-        # Image Builder requires that the commit hash in the filename is preceded by a tilde (~) instead of a dot (.).
-        for file in *.apk; do
-            # Use sed to replace the last dot before the 7-character commit hash with a tilde
-            new_file=$(echo "${file}" | sed -E 's/\.([a-f0-9]{7}\.apk)/~\1/')
-            if [[ "${file}" != "${new_file}" ]]; then
-                mv -f "${file}" "${new_file}" || true
-                echo -e "${INFO} Renamed: ${file} -> ${new_file}"
-            fi
-        done
-    else
-        echo -e "${INFO} OPKG-based ImageBuilder detected. Removing .apk files..."
-        rm -f *.apk
-    fi
-
     sync && sleep 3
-    echo -e "${INFO} [ packages ] directory contents: \n$(ls -lh . 2>/dev/null)"
+    echo -e "${INFO} [ packages ] directory status: \n$(ls -lh . 2>/dev/null)"
 }
 
 # Add custom packages, lib, theme, app and i18n, etc.
 custom_config() {
     cd ${imagebuilder_path}
-    echo -e "${STEPS} Loading custom package configuration..."
+    echo -e "${STEPS} Start adding custom config..."
 
     config_list=""
     if [[ -s "${custom_config_file}" ]]; then
         config_list="$(sed -n 's/^CONFIG_PACKAGE_\(.*\)=y$/\1/p' "${custom_config_file}" | tr '\n' ' ')"
-        echo -e "${INFO} Custom package list: \n$(echo "${config_list}" | tr ' ' '\n')"
+        echo -e "${INFO} Custom config list: \n$(echo "${config_list}" | tr ' ' '\n')"
     else
-        echo -e "${INFO} No custom configuration file found, skipped."
+        echo -e "${INFO} No custom config was added."
     fi
 }
 
@@ -180,7 +157,7 @@ custom_config() {
 # The [ files ] directory should be placed in the Image Builder root directory where you issue the make command.
 custom_files() {
     cd ${imagebuilder_path}
-    echo -e "${STEPS} Adding custom files..."
+    echo -e "${STEPS} Start adding custom files..."
 
     if [[ -d "${custom_files_path}" ]]; then
         # Copy custom files
@@ -188,16 +165,16 @@ custom_files() {
         cp -rf ${custom_files_path}/* files
 
         sync && sleep 3
-        echo -e "${INFO} [ files ] directory contents: \n$(ls -lh files/ 2>/dev/null)"
+        echo -e "${INFO} [ files ] directory status: \n$(ls -lh files/ 2>/dev/null)"
     else
-        echo -e "${INFO} No custom files added, skipped."
+        echo -e "${INFO} No customized files were added."
     fi
 }
 
 # Rebuild OpenWrt firmware
 rebuild_firmware() {
     cd ${imagebuilder_path}
-    echo -e "${STEPS} Building OpenWrt firmware with Image Builder..."
+    echo -e "${STEPS} Start building OpenWrt with Image Builder..."
 
     # Selecting default packages, lib, theme, app and i18n, etc.
     my_packages="\
@@ -212,7 +189,7 @@ rebuild_firmware() {
         uclient-fetch uhttpd uhttpd-mod-ubus unzip uqmi usb-modeswitch uuidgen wget-ssl whereis \
         which wpad-basic wwan xfs-fsck xfs-mkfs xz xz-utils ziptool zoneinfo-asia zoneinfo-core zstd \
         \
-        luci luci-base luci-compat luci-i18n-base-zh-cn luci-lib-base \
+        luci luci-base luci-compat luci-i18n-base-zh-cn luci-lib-base luci-lib-docker \
         luci-lib-ip luci-lib-ipkg luci-lib-jsonc luci-lib-nixio luci-mod-admin-full luci-mod-network \
         luci-mod-status luci-mod-system luci-proto-3g luci-proto-ipip luci-proto-ipv6 \
         luci-proto-ncm luci-proto-openconnect luci-proto-ppp luci-proto-qmi luci-proto-relay \
@@ -228,14 +205,14 @@ rebuild_firmware() {
     make image PROFILE="" PACKAGES="${my_packages}" FILES="files"
 
     sync && sleep 3
-    echo -e "${INFO} [ ${openwrt_dir}/bin/targets/*/*/ ] directory contents: \n$(ls -lh bin/targets/*/*/ 2>/dev/null)"
-    echo -e "${INFO} Firmware build completed successfully."
+    echo -e "${INFO} [ ${openwrt_dir}/bin/targets/*/*/ ] directory status: \n$(ls -lh bin/targets/*/*/ 2>/dev/null)"
+    echo -e "${INFO} The rebuild is successful."
 }
 
 # Custom settings after rebuild
 custom_settings() {
     cd ${imagebuilder_path}
-    echo -e "${STEPS} Applying post-build customizations..."
+    echo -e "${STEPS} Start performing custom settings after rebuild..."
 
     # Clean up temporary and output directories
     [[ -d "${tmp_path}" ]] && rm -rf "${tmp_path:?}"/* || mkdir -p "${tmp_path}"
@@ -246,9 +223,9 @@ custom_settings() {
 
     # Check if the original archive exists
     if [[ ! -f "${original_archive}" ]]; then
-        error_msg "No rootfs.tar.gz archive found in build output."
+        error_msg "No *rootfs.tar.gz found."
     else
-        echo -e "${INFO} Found rootfs archive: ${original_archive}"
+        echo -e "${INFO} Processing: ${original_archive}"
 
         # Get the filename and path
         original_filename="$(basename "${original_archive}")"
@@ -262,7 +239,7 @@ custom_settings() {
         # Modify etc/openwrt_release
         release_file="${unpack_path}/etc/openwrt_release"
         if [[ -f "${release_file}" ]]; then
-            echo -e "${INFO} Updating etc/openwrt_release..."
+            echo -e "${INFO} Modifying etc/openwrt_release..."
             {
                 echo "DISTRIB_SOURCEREPO='github.com/${op_sourse}/${op_sourse}'"
                 echo "DISTRIB_SOURCECODE='${op_sourse}'"
@@ -277,7 +254,7 @@ custom_settings() {
         (cd "${unpack_path}" && tar -czpf "${tmp_path}/${original_filename}" ./)
 
         # Move the repacked archive to the output directory
-        echo -e "${INFO} Moving modified rootfs to output directory..."
+        echo -e "${INFO} Moving repacked OpenWrt rootfs file to output directory..."
         mv -f "${tmp_path}/${original_filename}" "${output_path}/"
         # Copy the config file to the output directory
         cp -f .config "${output_path}/config" || true
@@ -286,20 +263,20 @@ custom_settings() {
     sync && sleep 3
     cd ${make_path}
     rm -rf "${imagebuilder_path}"
-    echo -e "${INFO} [ ${output_path} ] directory contents: \n$(ls -lh ${output_path}/ 2>/dev/null)"
-    echo -e "${INFO} Post-build customizations applied successfully."
+    echo -e "${INFO} [ ${output_path} ] directory status: \n$(ls -lh ${output_path}/ 2>/dev/null)"
+    echo -e "${INFO} Modification successfully."
 }
 
 # Show welcome message
-echo -e "${STEPS} Welcome to the OpenWrt Image Builder."
-[[ -x "${0}" ]] || error_msg "Please grant execution permission: [ chmod +x ${0} ]"
-[[ -z "${1}" ]] && error_msg "Please specify the OpenWrt source and branch, e.g. [ ${0} openwrt:24.10.4 ]"
-[[ "${1}" =~ ^[a-z]{3,}:[0-9]+ ]] || error_msg "Invalid parameter format. Expected <source:branch>, e.g. openwrt:24.10.4"
+echo -e "${STEPS} Welcome to Rebuild OpenWrt Using the Image Builder."
+[[ -x "${0}" ]] || error_msg "Please give the script permission to run: [ chmod +x ${0} ]"
+[[ -z "${1}" ]] && error_msg "Please specify the OpenWrt Branch, such as [ ${0} openwrt:24.10.4 ]"
+[[ "${1}" =~ ^[a-z]{3,}:[0-9]+ ]] || error_msg "Incoming parameter format <source:branch>: openwrt:24.10.4"
 op_sourse="${1%:*}"
 op_branch="${1#*:}"
-echo -e "${INFO} Working directory: [ ${PWD} ]"
-echo -e "${INFO} Source: [ ${op_sourse} ], Branch: [ ${op_branch} ]"
-echo -e "${INFO} Server disk usage before build: \n$(df -hT ${make_path}) \n"
+echo -e "${INFO} Rebuild path: [ ${PWD} ]"
+echo -e "${INFO} Rebuild Source: [ ${op_sourse} ], Branch: [ ${op_branch} ]"
+echo -e "${INFO} Server space usage before starting to compile: \n$(df -hT ${make_path}) \n"
 #
 # Perform related operations
 download_imagebuilder
@@ -311,5 +288,5 @@ rebuild_firmware
 custom_settings
 #
 # Show server end information
-echo -e "${SUCCESS} OpenWrt Image Builder completed successfully."
-echo -e "${INFO} Server disk usage after build: \n$(df -hT ${make_path}) \n"
+echo -e "${SUCCESS} OpenWrt ImageBuilder processed successfully."
+echo -e "${INFO} Server space usage after compilation: \n$(df -hT ${make_path}) \n"
