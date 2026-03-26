@@ -82,7 +82,7 @@ download_imagebuilder() {
     mv -f *-imagebuilder-* ${openwrt_dir}
 
     sync && sleep 3
-    echo -e "${INFO} [ ${make_path} ] directory contents: \n$(ls -lh . 2>/dev/null)"
+    echo -e "${INFO} [ ${make_path} ] directory status: \n$(ls -lh . 2>/dev/null)"
 }
 
 # Adjust related files in the ImageBuilder directory
@@ -99,7 +99,7 @@ adjust_settings() {
         sed -i "s|CONFIG_TARGET_ROOTFS_SQUASHFS=.*|# CONFIG_TARGET_ROOTFS_SQUASHFS is not set|g" .config
         sed -i "s|CONFIG_TARGET_IMAGES_GZIP=.*|# CONFIG_TARGET_IMAGES_GZIP is not set|g" .config
     else
-        echo -e "${INFO} [ ${imagebuilder_path} ] directory contents: \n$(ls -lh . 2>/dev/null)"
+        echo -e "${INFO} [ ${imagebuilder_path} ] directory status: \n$(ls -lh . 2>/dev/null)"
         error_msg "No .config file found in [ ${download_file} ]."
     fi
 
@@ -107,7 +107,7 @@ adjust_settings() {
     # ......
 
     sync && sleep 3
-    echo -e "${INFO} [ ${imagebuilder_path} ] directory contents: \n$(ls -lh . 2>/dev/null)"
+    echo -e "${INFO} [ ${imagebuilder_path} ] directory status: \n$(ls -lh . 2>/dev/null)"
 }
 
 # Add custom packages
@@ -216,6 +216,8 @@ rebuild_firmware() {
         luci-lib-ip luci-lib-ipkg luci-lib-jsonc luci-lib-nixio luci-mod-admin-full luci-mod-network \
         luci-mod-status luci-mod-system luci-proto-3g luci-proto-ipip luci-proto-ipv6 \
         luci-proto-ncm luci-proto-openconnect luci-proto-ppp luci-proto-qmi luci-proto-relay \
+        kmod-zram zram-swap \
+        luci-i18n-opkg-zh-cn \
         \
         luci-app-amlogic luci-i18n-amlogic-zh-cn \
         \
